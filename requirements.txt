@@ -4,6 +4,6 @@ plotly
 pandas
 sentence-transformers
 seaborn
-sklearn
+scikit-learn
 pickle
 torch
