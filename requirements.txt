@@ -3,3 +3,7 @@ nbconvert
 plotly
 pandas
 sentence-transformers
+seaborn
+sklearn
+pickle
+torch
