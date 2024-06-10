@@ -5,5 +5,4 @@ pandas
 sentence-transformers
 seaborn
 scikit-learn
-pickle
 torch
