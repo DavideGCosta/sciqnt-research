@@ -27,8 +27,9 @@ jobs:
       run: |
         jupyter nbconvert --to html --execute 'Financial News Strategy/2. Sentence Embeddings.ipynb'
 
-    - name: Upload HTML artifact
-      uses: actions/upload-artifact@v2
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        name: notebook-html
-        path: 'Financial News Strategy/2. Sentence Embeddings.ipynb'
+        personal_token: ${{ secrets.GH_PAT }}  # Use the personal access token
+        publish_dir: ./  # The directory containing the HTML file
+        publish_branch: gh-pages  # The branch to deploy to (usually gh-pages)
