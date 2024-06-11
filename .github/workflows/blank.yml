@@ -73,23 +73,16 @@ jobs:
 
           # Apply dark theme and convert to HTML
           echo "Converting \"$file\" to HTML with dark theme"
-          export PLOTLY_THEME=plotly_dark
+          export THEME=plotly_dark
           jt -t onedork -f roboto -fs 10 -tfs 10 -nfs 115 -cellw 88% -T
           jupyter nbconvert --to html "$file" --output "${base_name}_dark.html" --output-dir "$dir_name"
-
-          # Debug statement before theme reset
-          echo "Resetting Jupyter theme"
-          # Reset to default theme
-          jt -r
-          # Debug statement after theme reset
-          echo "Jupyter theme reset complete"
 
         done <<< "$notebook_files"
 
         # Check the documentation directory
         echo "Contents of the documentation directory:"
         ls -R documentation
-        
+
     - name: Commit and Push changes
       run: |
         if [ -d "documentation" ] && [ "$(ls -A documentation)" ]; then
