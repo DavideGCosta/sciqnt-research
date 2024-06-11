@@ -35,32 +35,43 @@ jobs:
         if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
           echo "HEAD~1 found"
           # Create a list of modified or new .ipynb files
-          files=$(git diff --name-only HEAD~1 HEAD | grep '^main/.*\.ipynb$' || true)
+          files=$(git diff --name-only HEAD~1 HEAD)
         else
           echo "HEAD~1 not found, handling initial commit or very new branch"
           # Handle initial commit or very new branch
-          files=$(git ls-files --others --exclude-standard --full-name main | grep '\.ipynb$' || true)
+          files=$(git ls-files --others --exclude-standard --full-name main)
         fi
 
-        echo "Files to be processed:"
+        echo "All changed files:"
         echo "$files"
 
-        if [ -z "$files" ]; then
+        # Filter for Jupyter notebook files
+        notebook_files=$(echo "$files" | grep '^main/.*\.ipynb$' || true)
+
+        echo "Jupyter notebook files to be processed:"
+        echo "$notebook_files"
+
+        if [ -z "$notebook_files" ]; then
           echo "No Jupyter notebook files to convert."
           exit 0
         fi
 
-        # Process each file
-        for file in $files; do
+        # Process each notebook file
+        for file in $notebook_files; do
           # Generate the target path in the documentation folder
           target=${file/main/documentation}
+          echo "Processing \"$file\" -> \"$target\""
           
           # Create the target directory if it doesn't exist
-          mkdir -p $(dirname $target)
+          mkdir -p "$(dirname "$target")"
           
           # Convert the .ipynb file to HTML
-          jupyter nbconvert --to html "$file" --output-dir=$(dirname $target)
+          jupyter nbconvert --to html "$file" --output-dir="$(dirname "$target")"
         done
+        
+        # Check the documentation directory
+        echo "Contents of the documentation directory:"
+        ls -R documentation
         
     - name: Commit and Push changes
       run: |
