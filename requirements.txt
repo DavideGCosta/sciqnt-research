@@ -1,0 +1,8 @@
+jupyter
+nbconvert
+plotly
+pandas
+sentence-transformers
+seaborn
+scikit-learn
+torch
