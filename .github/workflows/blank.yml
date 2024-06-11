@@ -8,34 +8,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
       with:
         fetch-depth: 2  # Fetch a couple of commits to ensure HEAD~1 is available
-      
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.x
-        
-    - name: Install nbconvert
-      run: |
-        python -m pip install --upgrade pip
-        pip install nbconvert
+        python-version: '3.x'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
+        pip install nbconvert jupyterthemes
+
     - name: Convert and Sync Notebooks
       run: |
         set -e  # Exit immediately if a command exits with a non-zero status
         # Fetch all branches and tags to ensure HEAD~1 is available
         git fetch --all
-        
+
         # Check if HEAD~1 is available
         if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
           echo "HEAD~1 found"
@@ -65,20 +60,32 @@ jobs:
         while IFS= read -r file; do
           # Generate the target path in the documentation folder
           target="${file//main/documentation}"
-          echo "Processing \"$file\" -> \"$target\""
-          
+          base_name=$(basename "$target" .ipynb)
+          dir_name=$(dirname "$target")
+          echo "Processing \"$file\" -> \"$dir_name\""
+
           # Create the target directory if it doesn't exist
-          mkdir -p "$(dirname "$target")"
-          
-          # Convert the .ipynb file to HTML
-          echo "Converting \"$file\" to HTML in \"$(dirname "$target")\""
-          jupyter nbconvert --to html --execute "$file" --output-dir="$(dirname "$target")"
+          mkdir -p "$dir_name"
+
+          # Convert the .ipynb file to HTML with light theme
+          echo "Converting \"$file\" to HTML with light theme"
+          jupyter nbconvert --to html "$file" --output "$dir_name/${base_name}_light.html"
+
+          # Apply dark theme and convert to HTML
+          echo "Converting \"$file\" to HTML with dark theme"
+          export THEME=dark
+          jt -t onedork -f roboto -fs 10 -tfs 10 -nfs 115 -cellw 88% -T
+          jupyter nbconvert --to html "$file" --output "$dir_name/${base_name}_dark.html"
+
+          # Reset to default theme
+          jt -r
+
         done <<< "$notebook_files"
-        
+
         # Check the documentation directory
         echo "Contents of the documentation directory:"
         ls -R documentation
-        
+
     - name: Commit and Push changes
       run: |
         if [ -d "documentation" ] && [ "$(ls -A documentation)" ]; then
