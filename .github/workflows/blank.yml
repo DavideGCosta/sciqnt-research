@@ -1,34 +1,52 @@
-name: Execute and Convert Notebook to HTML
+name: Sync Notebooks to Documentation
 
 on:
   push:
+    paths:
+      - 'main/**/*.ipynb'
     branches:
-      - financial-news-strategy
+      - main
 
 jobs:
-  execute-and-convert:
+  build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Check out the repository
+    - name: Checkout Repository
       uses: actions/checkout@v2
-
+      
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.x
-
-    - name: Install dependencies
+        python-version: '3.8'
+        
+    - name: Install nbconvert
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Execute and convert notebook to HTML
+        pip install nbconvert
+    
+    - name: Convert and Sync Notebooks
       run: |
-        jupyter nbconvert --to html --execute 'Financial News Strategy/2. Sentence Embeddings.ipynb'
+        # Create a list of modified or new .ipynb files
+        files=$(git diff --name-only HEAD~1 HEAD | grep '^main/.*\.ipynb$')
 
-    - name: Upload HTML artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: notebook-html
-        path: 'Financial News Strategy/2. Sentence Embeddings.ipynb'
+        for file in $files; do
+          # Generate the target path in the documentation folder
+          target=${file/main/documentation}
+          
+          # Create the target directory if it doesn't exist
+          mkdir -p $(dirname $target)
+          
+          # Convert the .ipynb file to HTML
+          jupyter nbconvert --to html "$file" --output-dir=$(dirname $target)
+        done
+        
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add documentation
+        git diff-index --quiet HEAD || git commit -m "Update documentation with new or modified notebooks"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
