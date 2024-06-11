@@ -69,13 +69,13 @@ jobs:
 
           # Convert the .ipynb file to HTML with light theme
           echo "Converting \"$file\" to HTML with light theme"
-          jupyter nbconvert --to html "$file" --output "${dir_name}/${base_name}_light.html"
+          jupyter nbconvert --to html "$file" --output "${base_name}_light.html"
 
           # Apply dark theme and convert to HTML
           echo "Converting \"$file\" to HTML with dark theme"
-          export PLOTLY_THEME=plotly_dark
+          export THEME=dark
           jt -t onedork -f roboto -fs 10 -tfs 10 -nfs 115 -cellw 88% -T
-          jupyter nbconvert --to html "$file" --output "${dir_name}/${base_name}_dark.html"
+          jupyter nbconvert --to html "$file" --output "${base_name}_dark.html"
 
           # Reset to default theme
           jt -r
