@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
       
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -27,19 +29,27 @@ jobs:
     
     - name: Convert and Sync Notebooks
       run: |
-        # Create a list of modified or new .ipynb files
-        files=$(git diff --name-only HEAD~1 HEAD | grep '^main/.*\.ipynb$')
-
-        for file in $files; do
-          # Generate the target path in the documentation folder
-          target=${file/main/documentation}
+        # Fetch all branches and tags to ensure HEAD~1 is available
+        git fetch --all
+        
+        # Check if there's a previous commit
+        if [ $(git rev-parse --is-inside-work-tree 2>/dev/null) ]; then
+          # Create a list of modified or new .ipynb files
+          files=$(git diff --name-only HEAD~1 HEAD | grep '^main/.*\.ipynb$')
           
-          # Create the target directory if it doesn't exist
-          mkdir -p $(dirname $target)
-          
-          # Convert the .ipynb file to HTML
-          jupyter nbconvert --to html "$file" --output-dir=$(dirname $target)
-        done
+          for file in $files; do
+            # Generate the target path in the documentation folder
+            target=${file/main/documentation}
+            
+            # Create the target directory if it doesn't exist
+            mkdir -p $(dirname $target)
+            
+            # Convert the .ipynb file to HTML
+            jupyter nbconvert --to html "$file" --output-dir=$(dirname $target)
+          done
+        else
+          echo "No previous commit found, skipping notebook conversion."
+        fi
         
     - name: Commit and Push changes
       run: |
