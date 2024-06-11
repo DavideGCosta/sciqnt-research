@@ -15,7 +15,11 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
       with:
+<<<<<<< Updated upstream
         fetch-depth: 0  # Fetch all history for all branches and tags
+=======
+        fetch-depth: 2  # Fetch a couple of commits to ensure HEAD~1 is available
+>>>>>>> Stashed changes
       
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -29,6 +33,7 @@ jobs:
     
     - name: Convert and Sync Notebooks
       run: |
+<<<<<<< Updated upstream
         # Fetch all branches and tags to ensure HEAD~1 is available
         git fetch --all
         
@@ -50,6 +55,26 @@ jobs:
         else
           echo "No previous commit found, skipping notebook conversion."
         fi
+=======
+        # Create a list of modified or new .ipynb files
+        if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+          files=$(git diff --name-only HEAD~1 HEAD | grep '^main/.*\.ipynb$')
+        else
+          # Handle initial commit or very new branch
+          files=$(git ls-files --others --exclude-standard --full-name main | grep '\.ipynb$')
+        fi
+
+        for file in $files; do
+          # Generate the target path in the documentation folder
+          target=${file/main/documentation}
+          
+          # Create the target directory if it doesn't exist
+          mkdir -p $(dirname $target)
+          
+          # Convert the .ipynb file to HTML
+          jupyter nbconvert --to html "$file" --output-dir=$(dirname $target)
+        done
+>>>>>>> Stashed changes
         
     - name: Commit and Push changes
       run: |
@@ -59,4 +84,8 @@ jobs:
         git diff-index --quiet HEAD || git commit -m "Update documentation with new or modified notebooks"
         git push
       env:
+<<<<<<< Updated upstream
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+=======
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> Stashed changes
