@@ -42,6 +42,14 @@ jobs:
           files=$(git ls-files --others --exclude-standard --full-name main | grep '\.ipynb$' || true)
         fi
 
+        echo "Files to be processed:"
+        echo "$files"
+
+        if [ -z "$files" ]; then
+          echo "No Jupyter notebook files to convert."
+          exit 0
+        fi
+
         # Process each file
         for file in $files; do
           # Generate the target path in the documentation folder
@@ -56,10 +64,14 @@ jobs:
         
     - name: Commit and Push changes
       run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add documentation
-        git diff-index --quiet HEAD || git commit -m "Update documentation with new or modified notebooks"
-        git push
+        if [ -d "documentation" ] && [ "$(ls -A documentation)" ]; then
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add documentation
+          git diff-index --quiet HEAD || git commit -m "Update documentation with new or modified notebooks"
+          git push
+        else
+          echo "No changes to commit."
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
