@@ -66,6 +66,7 @@ jobs:
           mkdir -p "$(dirname "$target")"
           
           # Convert the .ipynb file to HTML
+          echo "Converting \"$file\" to HTML in \"$(dirname "$target")\""
           jupyter nbconvert --to html "$file" --output-dir="$(dirname "$target")"
         done
         
