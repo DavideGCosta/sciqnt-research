@@ -59,7 +59,7 @@ jobs:
         # Process each notebook file
         while IFS= read -r file; do
           # Generate the target path in the documentation folder
-          target="${file//main/documentation}"
+          target="documentation/${file#main/}"
           base_name=$(basename "$target" .ipynb)
           dir_name=$(dirname "$target")
           echo "Processing \"$file\" -> \"$dir_name\""
