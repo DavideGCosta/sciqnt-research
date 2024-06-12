@@ -25,6 +25,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Install gdrive
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+        wget -O gdrive "https://github.com/prasmussen/gdrive/releases/download/2.1.0/gdrive-linux-x64"
+        chmod +x gdrive
+        sudo install gdrive /usr/local/bin/gdrive
+
+    - name: Configure gdrive with Service Account
+      run: |
+        echo "${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}" > gdrive-service-account.json
+        gdrive --service-account gdrive-service-account.json list
+
     - name: Convert and Sync Notebooks
       run: |
         set -e  # Exit immediately if a command exits with a non-zero status
@@ -76,6 +89,9 @@ jobs:
           export THEME=dark
           jupyter nbconvert --to html "$file" --HTMLExporter.theme=dark --execute --output "${base_name}_dark.html" --output-dir "$dir_name"
 
+          # Upload the notebook to Google Drive
+          echo "Uploading \"$file\" to Google Drive"
+          gdrive --service-account gdrive-service-account.json upload --parent ${{ secrets.GDRIVE_FOLDER_ID }} "$file"
         done <<< "$notebook_files"
 
         # Check the documentation directory
